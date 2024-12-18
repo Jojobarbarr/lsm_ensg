@@ -2,7 +2,7 @@ from mesh import Mesh
 import numpy as np
 import scipy.sparse
 from scipy.sparse.linalg import lsmr
-
+#bababa
 m = Mesh("shell/slice.obj")
 m.write_obj("output_ref.obj")
 m.write_vtk("output_ref.vtk")
