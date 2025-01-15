@@ -4,16 +4,12 @@ import numpy as np
 import scipy.sparse
 from scipy.sparse.linalg import lsmr
 
-model = "chevron"
+model = "ifp2"
 m = Mesh(model+"/slice.obj")
 attr = importlib.import_module(model + ".attributes")
 
 m.write_vtk("output_ref.vtk")
 m.write_obj("output_ref.obj")
-
-horizon_set = {attr.horizon_id[c] for c in range(m.ncorners) if attr.horizon_id[c] >= 0}
-sorted_horizon_list = sorted(list(horizon_set))
-horizon_list = [[] for _ in sorted_horizon_list]
 
 # Flatten the horizons
 dim = 1
@@ -26,10 +22,14 @@ for c in range(m.ncorners):
     distance = m.V[m.dst(c)][dim] - m.V[m.org(c)][dim]
     A[c, m.dst(c)] = 1
     A[c, m.org(c)] = -1
-    b[c] = distance
+    b[c] = distance * 1
     if attr.horizon_id[c] >= 0:
         A[c, m.org(c)] = weight
         b[c] = (attr.horizon_id[c] / 37.76) * weight
+        # BRICOLAGE
+        if model == "shell":
+            A[c, m.dst(c)] = -weight
+            b[c] = 0
 
 
 print(f"A.shape = {A.shape}")
@@ -50,7 +50,7 @@ for c in range(m.ncorners):
     distance = m.V[m.dst(c)][0] - m.V[m.org(c)][0]
     A[c, m.dst(c)] = 1
     A[c, m.org(c)] = -1
-    b[c] = distance
+    b[c] = distance * 1
     if attr.is_fault[c]:
         A[c, m.dst(c)] = weight
         A[c, m.org(c)] = -weight
