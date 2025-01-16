@@ -13,39 +13,30 @@ m.write_obj("output_ref.obj")
 # Lists of list of vertices on the same horizon.
 # Assuming that the horizon_id are consecutive starting from 0.
 vertices_on_horizons = [
-    [] for horizon_id in set(attr.horizon_id) if horizon_id >= 0
+    set() for horizon_id in set(attr.horizon_id) if horizon_id >= 0
 ]
 
 # List of the vertices on a fault
-vertices_on_faults = []
+vertices_on_faults = set()
 
 for corner in range(m.ncorners):
+    org_vertex = m.org(corner)
     if attr.horizon_id[corner] >= 0:
-        vertices_on_horizons[attr.horizon_id[corner]].append(m.org(corner))
+        vertices_on_horizons[attr.horizon_id[corner]].add(org_vertex)
     if attr.is_fault[corner]:
-        vertices_on_faults.append(m.org(corner))
+        vertices_on_faults.add(org_vertex)
         # As faults can be a border, we need to add the destination vertex as
         # well because it could be only the destination vertex of a fault
-        # corner. # There will be duplicata so we will need to handle that.
-        vertices_on_faults.append(m.dst(corner))
+        # corner. As we are working with set, dupllicata are not an issue.
+        vertices_on_faults.add(m.dst(corner))
 
 # List of intersection lists between vertices on horizons and vertices on
 # faults.
-vertices_on_faulted_horizons = [[] for _ in range(len(vertices_on_horizons))]
-
-for horizon_id, vertices_on_horizon in enumerate(vertices_on_horizons):
-    for horizon_vertex in vertices_on_horizon:
-        for fault_vertex in vertices_on_faults:
-            if horizon_vertex == fault_vertex:
-                vertices_on_faulted_horizons[horizon_id].append(
-                    horizon_vertex.item()
-                )
-
-# Remove duplicates
-for horizon_id in range(len(vertices_on_faulted_horizons)):
-    vertices_on_faulted_horizons[horizon_id] = list(
-        set(vertices_on_faulted_horizons[horizon_id])
-    )
+vertices_on_faulted_horizons = []
+for vertices_on_horizon in vertices_on_horizons:
+    # Find intersection with fault vertices
+    faulted_vertices = vertices_on_horizon & vertices_on_faults
+    vertices_on_faulted_horizons.append(list(faulted_vertices))
 
 # Number of additionnal constraints
 n_additional_constraints = sum(
