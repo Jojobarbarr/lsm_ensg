@@ -99,7 +99,7 @@ dim = 0  # We work on x-coordinate
 A = scipy.sparse.lil_matrix((2 * m.ncorners, m.nverts))
 b = [0] * A.shape[0]
 
-weight_keeping_half_edge_length
+weight_keeping_half_edge_length = 1
 weight_flattening_faults = 100
 weight_connecting_faults = 1
 for c in range(m.ncorners):
